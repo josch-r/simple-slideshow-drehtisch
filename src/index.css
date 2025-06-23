@@ -12,18 +12,22 @@
 
 * {
   box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+  background-color: black;
 }
 
 body {
-  margin: 0;
-  padding: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  overflow-x: hidden;
+  height: 100%;
+  background-color: black;
+  overflow-x: hidden; /* Prevent horizontal scroll */
 }
 
 #root {
   width: 100%;
   min-height: 100vh;
+  background-color: black;
 }
-

@@ -40,7 +40,7 @@ const mediaData = {
     { id: "ger_4", type: "image", filename: "4.jpg" },
     { id: "ger_5", type: "image", filename: "5.jpg" },
     { id: "ger_6", type: "image", filename: "6.jpg" },
-    { id: "ger_video", type: "video", filename: "sheep.mp4" }
+    { id: "ger_video", type: "video", filename: "cow.mp4" }
   ],
   eng: [
     { id: "eng_7", type: "image", filename: "7.jpg" },
@@ -49,7 +49,7 @@ const mediaData = {
     { id: "eng_10", type: "image", filename: "10.jpg" },
     { id: "eng_11", type: "image", filename: "11.jpg" },
     { id: "eng_12", type: "image", filename: "12.jpg" },
-    { id: "eng_video", type: "video", filename: "cow.mp4" }
+    { id: "eng_video", type: "video", filename: "sheep.mp4" }
   ]
 };
 

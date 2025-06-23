@@ -1,10 +1,11 @@
 import Slideshow3D from './components/Slideshow3D'
-import './App.css'
 
 function App() {
   return (
-    <div className="app">
+    <div className="min-h-screen bg-black w-[100vw]">
+      <div>
       <Slideshow3D />
+      </div>
     </div>
   )
 }

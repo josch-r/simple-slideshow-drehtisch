@@ -1,22 +1,79 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 // eslint-disable-next-line no-unused-vars
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { getMediaForLanguage } from "../assets/mediaDataLoader.js";
 
 const Slideshow3D = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentLanguage, setCurrentLanguage] = useState("german");
   const [mediaItems, setMediaItems] = useState([]);
+  const [isIdle, setIsIdle] = useState(false);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+
+  const idleTimeoutRef = useRef(null);
+  const IDLE_TIME = 2000; // 2 seconds
 
   // Initialize media items based on language
   useEffect(() => {
     const items = getMediaForLanguage(currentLanguage);
+    console.log("Loading media items for", currentLanguage, ":", items);
     setMediaItems(items);
-    setCurrentIndex(currentIndex);
-  }, [currentLanguage, currentIndex]);
+    // Don't reset currentIndex here - it causes issues with video playback
+  }, [currentLanguage]);
+
+  const resetIdleTimer = useCallback(() => {
+    // Clear existing timeout
+    if (idleTimeoutRef.current) {
+      clearTimeout(idleTimeoutRef.current);
+    }
+
+    // Hide idle screen if it's currently showing
+    setIsIdle(false);
+
+    // Don't start timer if video is playing
+    if (isVideoPlaying) {
+      return;
+    }
+
+    // Set new timeout
+    idleTimeoutRef.current = setTimeout(() => {
+      setIsIdle(true);
+    }, IDLE_TIME);
+  }, [isVideoPlaying, IDLE_TIME]);
+
+  // Initialize idle timer on component mount
+  useEffect(() => {
+    resetIdleTimer();
+
+    // Cleanup timeout on unmount
+    return () => {
+      if (idleTimeoutRef.current) {
+        clearTimeout(idleTimeoutRef.current);
+      }
+    };
+  }, [resetIdleTimer]);
+
+  // Reset timer when currentIndex changes, but consider video state
+  useEffect(() => {
+    // Check if current media item is a video
+    const currentItem = mediaItems[currentIndex];
+    if (currentItem?.type === 'video') {
+      // For videos, we'll let the video event handlers manage the timer
+      // Clear any existing timer and idle state
+      if (idleTimeoutRef.current) {
+        clearTimeout(idleTimeoutRef.current);
+      }
+      setIsIdle(false);
+    } else {
+      // For images, reset timer normally
+      setIsVideoPlaying(false);
+      resetIdleTimer();
+    }
+  }, [currentIndex, mediaItems, resetIdleTimer]);
 
   const changeLanguage = () => {
     setCurrentLanguage(currentLanguage === "german" ? "english" : "german");
+    resetIdleTimer(); // Reset on language change
   };
 
   const paginate = (newDirection) => {
@@ -34,8 +91,8 @@ const Slideshow3D = () => {
   const moveToIndex = (index) => {
     // Move to a specific index, wrapping around if necessary
     setCurrentIndex(() => {
-        const newIndex = (index + mediaItems.length) % mediaItems.length;
-        return newIndex;
+      const newIndex = (index + mediaItems.length) % mediaItems.length;
+      return newIndex;
     });
   };
 
@@ -68,6 +125,90 @@ const Slideshow3D = () => {
     };
   };
 
+  const IdleScreen = () => (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+      className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 rounded-xl"
+      onClick={resetIdleTimer} // Click to dismiss
+    >
+      <div className="text-center text-white">
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.3 }}
+          className="text-4xl mb-4"
+        >
+          💤 idle mode
+        </motion.div>
+      </div>
+    </motion.div>
+  );
+
+  // Handle video play/pause events
+  const handleVideoPlay = () => {
+    setIsVideoPlaying(true);
+    // Clear any existing idle timer when video starts playing
+    if (idleTimeoutRef.current) {
+      clearTimeout(idleTimeoutRef.current);
+    }
+    setIsIdle(false);
+  };
+
+  const handleVideoPause = () => {
+    setIsVideoPlaying(false);
+    // Start idle timer when video pauses
+    resetIdleTimer();
+  };
+
+  const handleVideoEnded = () => {
+    setIsVideoPlaying(false);
+    // Start idle timer when video ends
+
+    resetIdleTimer();
+  };
+
+  // Effect to handle video playback when currentIndex changes
+  useEffect(() => {
+    const currentItem = mediaItems[currentIndex];
+
+    if (currentItem?.type === "video") {
+      console.log("Attempting to play video:", currentItem.id);
+      
+      // Find the video element by data attribute
+      const video = document.querySelector(`[data-video-id="${currentItem.id}"]`);
+      
+      if (video) {
+        console.log("Video element found via querySelector");
+        video.currentTime = 0;
+        video.play()
+          .then(() => {
+            console.log("Video playing successfully");
+          })
+          .catch((error) => {
+            console.log("Video play failed:", error);
+          });
+      } else {
+        console.log("Video element not found");
+        
+        // Retry after a short delay
+        const timer = setTimeout(() => {
+          const retryVideo = document.querySelector(`[data-video-id="${currentItem.id}"]`);
+          if (retryVideo) {
+            retryVideo.currentTime = 0;
+            retryVideo.play().catch(err => console.log("Retry failed:", err));
+          }
+        }, 200);
+        
+        return () => clearTimeout(timer);
+      }
+    } else {
+      console.log("Current item is not a video:", currentItem?.type);
+    }
+  }, [currentIndex, mediaItems]);
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black p-[100px]">
       <div
@@ -83,17 +224,20 @@ const Slideshow3D = () => {
         >
           {mediaItems.map((mediaItem, index) => {
             const transform = getImageTransform(index);
+            const isCurrentItem = index === currentIndex;
 
             if (mediaItem.type === "video") {
               return (
                 <motion.video
-                  key={mediaItem.id}
+                  key={`${currentLanguage}-${mediaItem.id}`}
+                  data-video-id={mediaItem.id}
                   src={mediaItem.src}
                   className="rounded-xl select-none"
-                  autoPlay
                   muted
-                  loop
                   playsInline
+                  onPlay={isCurrentItem ? handleVideoPlay : undefined}
+                  onPause={isCurrentItem ? handleVideoPause : undefined}
+                  onEnded={isCurrentItem ? handleVideoEnded : undefined}
                   animate={transform}
                   transition={{
                     type: "spring",
@@ -114,7 +258,7 @@ const Slideshow3D = () => {
             } else {
               return (
                 <motion.img
-                  key={mediaItem.id}
+                  key={`${currentLanguage}-${mediaItem.id}`} // More stable key
                   src={mediaItem.src}
                   className="rounded-xl select-none"
                   alt={"test"}
@@ -138,9 +282,15 @@ const Slideshow3D = () => {
             }
           })}
         </div>
-        <div>
+
+        {/* Idle Screen Overlay */}
+        <AnimatePresence>
+          {isIdle && <IdleScreen />}
+        </AnimatePresence>
+
+        <div className="flex items-center flex-col mt-2">
           {/* Navigation arrows */}
-          <div className="flex justify-between items-center mt-4">
+          <div className="mx-4 flex justify-between items-center w-full">
             <button
               className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 p-2 rounded-md"
               onClick={() => paginate(-1)}
@@ -154,16 +304,25 @@ const Slideshow3D = () => {
               →
             </button>
           </div>
-          {/* Language toggle button */}
-          <button
-            className="block items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 mt-6 top-4 right-4 bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20"
-            onClick={changeLanguage}
-          >
-            {currentLanguage === "german" ? "English" : "Deutsch"}
-          </button>
-          <div className="flex items-center justify-start mt-4">
-            <p className="text-white">jump to index: </p>
-            <input type="number" className="bg-white rounded-md p-1 mx-2" min="1" max={mediaItems.length} value={currentIndex + 1} onChange={(e) => moveToIndex(Number(e.target.value) - 1)} />
+          <div className="flex flex-row items-center justify-between w-full mt-4">
+            {/* Language toggle button */}
+            <button
+              className="block items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 mt-6 top-4 right-4 bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20"
+              onClick={changeLanguage}
+            >
+              {currentLanguage === "german" ? "English" : "Deutsch"}
+            </button>
+            <div className="flex items-center justify-start mt-4">
+              <p className="text-white">jump to index: </p>
+              <input
+                type="number"
+                className="bg-white rounded-md p-1 mx-2"
+                min="1"
+                max={mediaItems.length}
+                value={currentIndex + 1}
+                onChange={(e) => moveToIndex(Number(e.target.value) - 1)}
+              />
+            </div>
           </div>
         </div>
       </div>
