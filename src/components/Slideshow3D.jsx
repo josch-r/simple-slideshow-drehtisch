@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "motion/react";
 import { getMediaForLanguage } from "../assets/mediaDataLoader.js";
+import { IDLE_TIME, styles } from "../assets/constants.js";
 
 const Slideshow3D = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -11,8 +12,6 @@ const Slideshow3D = () => {
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
   const idleTimeoutRef = useRef(null);
-
-  const IDLE_TIME = 2000; // 2 seconds
 
   // Initialize media items based on language
   useEffect(() => {
@@ -35,7 +34,7 @@ const Slideshow3D = () => {
     idleTimeoutRef.current = setTimeout(() => {
       setIsIdle(true);
     }, IDLE_TIME);
-  }, [isVideoPlaying, IDLE_TIME]);
+  }, [isVideoPlaying]);
 
   // Initialize idle timer on component mount
   useEffect(() => {
@@ -278,13 +277,13 @@ const Slideshow3D = () => {
           {/* Navigation arrows */}
           <div className="mx-4 flex justify-between items-center w-full">
             <button
-              className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 p-2 rounded-md"
+              className={styles.button_primary}
               onClick={() => paginate(-1)}
             >
               ←
             </button>
             <button
-              className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 p-2 rounded-md"
+              className={styles.button_primary}
               onClick={() => paginate(1)}
             >
               →
@@ -293,7 +292,7 @@ const Slideshow3D = () => {
           <div className="flex flex-row items-center justify-between w-full mt-4">
             {/* Language toggle button */}
             <button
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors h-10 px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20"
+              className={styles.button_secondary}
               onClick={changeLanguage}
             >
               {currentLanguage === "german" ? "English" : "Deutsch"}
