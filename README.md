@@ -3,5 +3,3 @@
 ```npm install```
 
 ```npm run dev```
-
-josch
