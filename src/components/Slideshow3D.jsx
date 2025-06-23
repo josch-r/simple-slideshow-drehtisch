@@ -11,14 +11,13 @@ const Slideshow3D = () => {
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
   const idleTimeoutRef = useRef(null);
+
   const IDLE_TIME = 2000; // 2 seconds
 
   // Initialize media items based on language
   useEffect(() => {
     const items = getMediaForLanguage(currentLanguage);
-    console.log("Loading media items for", currentLanguage, ":", items);
     setMediaItems(items);
-    // Don't reset currentIndex here - it causes issues with video playback
   }, [currentLanguage]);
 
   const resetIdleTimer = useCallback(() => {
@@ -29,13 +28,10 @@ const Slideshow3D = () => {
 
     // Hide idle screen if it's currently showing
     setIsIdle(false);
-
-    // Don't start timer if video is playing
     if (isVideoPlaying) {
       return;
     }
 
-    // Set new timeout
     idleTimeoutRef.current = setTimeout(() => {
       setIsIdle(true);
     }, IDLE_TIME);
@@ -45,7 +41,7 @@ const Slideshow3D = () => {
   useEffect(() => {
     resetIdleTimer();
 
-    // Cleanup timeout on unmount
+    //on onmount clean up timer
     return () => {
       if (idleTimeoutRef.current) {
         clearTimeout(idleTimeoutRef.current);
@@ -57,9 +53,7 @@ const Slideshow3D = () => {
   useEffect(() => {
     // Check if current media item is a video
     const currentItem = mediaItems[currentIndex];
-    if (currentItem?.type === 'video') {
-      // For videos, we'll let the video event handlers manage the timer
-      // Clear any existing timer and idle state
+    if (currentItem?.type === "video") {
       if (idleTimeoutRef.current) {
         clearTimeout(idleTimeoutRef.current);
       }
@@ -78,10 +72,8 @@ const Slideshow3D = () => {
 
   const paginate = (newDirection) => {
     if (newDirection > 0) {
-      // Go to next image (endless)
       setCurrentIndex((prevIndex) => (prevIndex + 1) % mediaItems.length);
     } else {
-      // Go to previous image (endless)
       setCurrentIndex(
         (prevIndex) => (prevIndex - 1 + mediaItems.length) % mediaItems.length
       );
@@ -89,7 +81,7 @@ const Slideshow3D = () => {
   };
 
   const moveToIndex = (index) => {
-    // Move to a specific index, wrapping around if necessary
+    //ensures index is within bounds
     setCurrentIndex(() => {
       const newIndex = (index + mediaItems.length) % mediaItems.length;
       return newIndex;
@@ -108,13 +100,13 @@ const Slideshow3D = () => {
       position += mediaItems.length;
     }
 
-    const xPosition = position * 100; // 100% width per image
+    const xPosition = position * 100;
 
-    // 3D effects based on position
-    const rotateY = position * -15; // Rotate images as they move away
-    const scale = 1 - Math.abs(position) * 0.1; // Scale down images that are further away
-    const opacity = Math.max(0.3, 1 - Math.abs(position) * 0.3); // Fade out distant images
-    const translateZ = -Math.abs(position) * 50; // Move images back in 3D space
+    // 3D effects
+    const rotateY = position * -15;
+    const scale = 1 - Math.abs(position) * 0.1;
+    const opacity = Math.max(0.3, 1 - Math.abs(position) * 0.3);
+    const translateZ = -Math.abs(position) * 50;
 
     return {
       x: `${xPosition}%`,
@@ -159,14 +151,11 @@ const Slideshow3D = () => {
 
   const handleVideoPause = () => {
     setIsVideoPlaying(false);
-    // Start idle timer when video pauses
     resetIdleTimer();
   };
 
   const handleVideoEnded = () => {
     setIsVideoPlaying(false);
-    // Start idle timer when video ends
-
     resetIdleTimer();
   };
 
@@ -175,15 +164,15 @@ const Slideshow3D = () => {
     const currentItem = mediaItems[currentIndex];
 
     if (currentItem?.type === "video") {
-      console.log("Attempting to play video:", currentItem.id);
-      
       // Find the video element by data attribute
-      const video = document.querySelector(`[data-video-id="${currentItem.id}"]`);
-      
+      const video = document.querySelector(
+        `[data-video-id="${currentItem.id}"]`
+      );
+
       if (video) {
-        console.log("Video element found via querySelector");
         video.currentTime = 0;
-        video.play()
+        video
+          .play()
           .then(() => {
             console.log("Video playing successfully");
           })
@@ -192,20 +181,19 @@ const Slideshow3D = () => {
           });
       } else {
         console.log("Video element not found");
-        
-        // Retry after a short delay
+
         const timer = setTimeout(() => {
-          const retryVideo = document.querySelector(`[data-video-id="${currentItem.id}"]`);
+          const retryVideo = document.querySelector(
+            `[data-video-id="${currentItem.id}"]`
+          );
           if (retryVideo) {
             retryVideo.currentTime = 0;
-            retryVideo.play().catch(err => console.log("Retry failed:", err));
+            retryVideo.play().catch((err) => console.log("Retry failed:", err));
           }
         }, 200);
-        
+
         return () => clearTimeout(timer);
       }
-    } else {
-      console.log("Current item is not a video:", currentItem?.type);
     }
   }, [currentIndex, mediaItems]);
 
@@ -284,9 +272,7 @@ const Slideshow3D = () => {
         </div>
 
         {/* Idle Screen Overlay */}
-        <AnimatePresence>
-          {isIdle && <IdleScreen />}
-        </AnimatePresence>
+        <AnimatePresence>{isIdle && <IdleScreen />}</AnimatePresence>
 
         <div className="flex items-center flex-col mt-2">
           {/* Navigation arrows */}
@@ -307,7 +293,7 @@ const Slideshow3D = () => {
           <div className="flex flex-row items-center justify-between w-full mt-4">
             {/* Language toggle button */}
             <button
-              className="block items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 mt-6 top-4 right-4 bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20"
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors h-10 px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20"
               onClick={changeLanguage}
             >
               {currentLanguage === "german" ? "English" : "Deutsch"}

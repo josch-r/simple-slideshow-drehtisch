@@ -2,10 +2,8 @@ import Slideshow3D from './components/Slideshow3D'
 
 function App() {
   return (
-    <div className="min-h-screen bg-black w-[100vw]">
-      <div>
+    <div className="min-h-screen bg-black w-screen h-screen overflow-hidden">
       <Slideshow3D />
-      </div>
     </div>
   )
 }

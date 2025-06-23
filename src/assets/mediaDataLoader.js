@@ -1,35 +1,32 @@
-// Dynamic imports for all images and videos
-const gerImages = import.meta.glob('../assets/ger/*.{jpg,JPG}', { eager: true });
-const engImages = import.meta.glob('../assets/eng/*.{jpg,JPG}', { eager: true });
-const gerVideos = import.meta.glob('../assets/ger/*.{mp4,MP4,mov,MOV,webm,WEBM}', { eager: true });
-const engVideos = import.meta.glob('../assets/eng/*.{mp4,MP4,mov,MOV,webm,WEBM}', { eager: true });
+// Consolidate the glob imports
+const allMedia = {
+  ger: {
+    images: import.meta.glob('../assets/ger/*.{jpg,JPG}', { eager: true }),
+    videos: import.meta.glob('../assets/ger/*.{mp4,MP4,mov,MOV,webm,WEBM}', { eager: true })
+  },
+  eng: {
+    images: import.meta.glob('../assets/eng/*.{jpg,JPG}', { eager: true }),
+    videos: import.meta.glob('../assets/eng/*.{mp4,MP4,mov,MOV,webm,WEBM}', { eager: true })
+  }
+};
 
-// Create a mapping of filenames to imported modules
-const mediaMap = {};
 
-// Process German images
-Object.entries(gerImages).forEach(([path, module]) => {
-  const filename = path.split('/').pop();
-  mediaMap[`ger/${filename}`] = module.default;
-});
+const processMedia = (mediaFiles, langKey) => {
+  const mediaMap = {};
+  Object.entries(mediaFiles).forEach(([path, module]) => {
+    const filename = path.split('/').pop();
+    mediaMap[`${langKey}/${filename}`] = module.default;
+  });
+  return mediaMap;
+};
 
-// Process English images
-Object.entries(engImages).forEach(([path, module]) => {
-  const filename = path.split('/').pop();
-  mediaMap[`eng/${filename}`] = module.default;
-});
-
-// Process German videos
-Object.entries(gerVideos).forEach(([path, module]) => {
-  const filename = path.split('/').pop();
-  mediaMap[`ger/${filename}`] = module.default;
-});
-
-// Process English videos
-Object.entries(engVideos).forEach(([path, module]) => {
-  const filename = path.split('/').pop();
-  mediaMap[`eng/${filename}`] = module.default;
-});
+// Create the complete media map
+const mediaMap = {
+  ...processMedia(allMedia.ger.images, 'ger'),
+  ...processMedia(allMedia.ger.videos, 'ger'),
+  ...processMedia(allMedia.eng.images, 'eng'),
+  ...processMedia(allMedia.eng.videos, 'eng')
+};
 
 // Media data with references to filenames
 const mediaData = {
