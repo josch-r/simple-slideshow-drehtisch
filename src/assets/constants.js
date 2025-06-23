@@ -2,7 +2,7 @@
 export const IDLE_TIME = 2000; 
 
 // Media data with references to filenames
-// folders are found automatically in the assets folder under ger and eng
+// folders are identified automatically in the assets folder under ger and eng
 export const mediaData = {
   ger: [
     { id: "ger_1", type: "image", filename: "1.jpg" },

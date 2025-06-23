@@ -122,15 +122,14 @@ const Slideshow3D = () => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
-      className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 rounded-xl"
-      onClick={resetIdleTimer} // Click to dismiss
+      className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 rounded-sm"
     >
       <div className="text-center text-white">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.3 }}
-          className="text-4xl mb-4"
+          className="text-4xl"
         >
           💤 idle mode
         </motion.div>
@@ -219,7 +218,7 @@ const Slideshow3D = () => {
                   key={`${currentLanguage}-${mediaItem.id}`}
                   data-video-id={mediaItem.id}
                   src={mediaItem.src}
-                  className="rounded-xl select-none"
+                  className="rounded-sm select-none"
                   muted
                   playsInline
                   onPlay={isCurrentItem ? handleVideoPlay : undefined}
@@ -247,7 +246,7 @@ const Slideshow3D = () => {
                 <motion.img
                   key={`${currentLanguage}-${mediaItem.id}`} // More stable key
                   src={mediaItem.src}
-                  className="rounded-xl select-none"
+                  className="rounded-sm select-none"
                   alt={"test"}
                   animate={transform}
                   transition={{
