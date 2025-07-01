@@ -12,7 +12,33 @@ const Slideshow3D = () => {
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
   const idleTimeoutRef = useRef(null);
+  
+  let timeout;
+  
+  const ToggleLanguage = () => {
+    console.log("changing language");
+    if (currentLanguage==="german") setCurrentLanguage("english");
+    else (setCurrentLanguage("german"));
+    
+  };
 
+  
+  window.addEventListener("keyup", (event) => {
+   
+    if(event.repeat){
+      return;
+    }
+     
+    else if ((event.key >0) && (event.key <=7) ) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() =>moveToIndex(Number(event.key)-1), 100);
+    }
+   else if(event.key==="q"){
+     timeout = setTimeout(() =>ToggleLanguage(), 500);
+   }
+  });
+
+  
   // Initialize media items based on language
   useEffect(() => {
     const items = getMediaForLanguage(currentLanguage);

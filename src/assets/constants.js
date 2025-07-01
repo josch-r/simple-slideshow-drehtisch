@@ -1,5 +1,5 @@
 // Time in ms until the idle mode is activated
-export const IDLE_TIME = 2000; 
+export const IDLE_TIME = 30000; 
 
 // Media data with references to filenames
 // folders are identified automatically in the assets folder under ger and eng
